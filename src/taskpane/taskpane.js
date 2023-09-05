@@ -13,6 +13,7 @@ Office.onReady((info) => {
     }
     // document.getElementById("run").onclick = run;
     document.getElementById("create-table").onclick = createTable;
+    document.getElementById("change-fill").onclick = changeFillColor;
   }
 });
 
@@ -47,17 +48,47 @@ Office.onReady((info) => {
 //   await context.sync();
 // });
 
+
+// changing selected worksheet fill color 
+
+async function changeFillColor() {
+  await Excel.run(async (context) => {
+    const color = document.getElementById("color").value;
+    const color_code = document.getElementById("color_code").value;
+    console.log(color,color_code);
+    const range = context.workbook.getSelectedRange();
+    range.load("address");
+    if(color_code){
+      range.format.fill.color = color_code;
+    }
+    else{
+      range.format.fill.color = color;
+
+    }
+    await context.sync();
+  })
+  .catch(function (error) {
+    console.log("Invalid color");
+  });
+}
+
+
+// creating a table
 async function createTable() {
   await Excel.run(async (context) => {
 
     // TODO1: Queue table creation logic here.
     const currentWorksheet = context.workbook.worksheets.getActiveWorksheet();
     const expensesTable = currentWorksheet.tables.add("A1:E1", true /*hasHeaders*/);
+    const studentTable = currentWorksheet.tables.add("G1:J1", true /*hasHeaders*/);
     expensesTable.name = "ExpensesTable";
+    studentTable.name = "StudentTable"
 
     // TODO2: Queue commands to populate the table with data.
     expensesTable.getHeaderRowRange().values =
       [["Date", "Merchant", "Category", "Amount","Positive"]];
+    studentTable.getHeaderRowRange().values =
+      [["ID", "Name", "Class", "Result"]];
 
     expensesTable.rows.add(null /*add at the end*/, [
       ["1/1/2017", "The Phone Company", "Communications", "420","0"],
@@ -69,11 +100,27 @@ async function createTable() {
       ["1/15/2017", "Best For You Organics Company", "Groceries", "97.88","0"]
     ]);
 
+
+    studentTable.rows.add(null, [
+      ["01","Ayat","9","3.5"],
+      ["02","Rahat","2","1.5"],
+      ["09","Fayed","1","4.5"],
+    ])
+
+
+
     // TODO3: Queue commands to format the table.
     expensesTable.columns.getItemAt(3).getRange().numberFormat = [['\u20AC#,##0.00']];
     expensesTable.columns.getItemAt(4).getRange().numberFormat = [['General']];
     expensesTable.getRange().format.autofitColumns();
     expensesTable.getRange().format.autofitRows();
+    
+    studentTable.columns.getItemAt(0).getRange().numberFormat = [['General']];
+    studentTable.columns.getItemAt(2).getRange().numberFormat = [['General']];
+    studentTable.columns.getItemAt(3).getRange().numberFormat = [['General']];
+    studentTable.getRange().format.autofitColumns();
+    studentTable.getRange().format.autofitRows();
+
 
     await context.sync();
   })
